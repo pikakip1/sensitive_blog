@@ -7,7 +7,6 @@ sensitive_info.env
 venv
 media
 img
-screenshots
 # C extensions
 *.so
 
