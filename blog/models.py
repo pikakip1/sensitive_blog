@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Count
+from django.db.models import Count, Prefetch
 from django.urls import reverse
 from django.contrib.auth.models import User
 
@@ -10,6 +10,11 @@ class PostQuerySet(models.QuerySet):
 
     def popular(self):
         return self.annotate(Count('likes')).order_by('-likes__count')
+
+    def set_prefetch_author_and_tags(self):
+        return self.prefetch_related(
+            Prefetch('author'),
+            Prefetch('tags', queryset=Tag.objects.popular()))
 
     def fetch_with_comments_count(self):
         popular_posts_ids = [post.id for post in self]
@@ -46,8 +51,6 @@ class Post(models.Model):
     image = models.ImageField('Картинка')
     published_at = models.DateTimeField('Дата и время публикации')
 
-    objects = PostQuerySet.as_manager()
-
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -62,6 +65,8 @@ class Post(models.Model):
         'Tag',
         related_name='posts',
         verbose_name='Теги')
+
+    objects = PostQuerySet.as_manager()
 
     def __str__(self):
         return self.title
